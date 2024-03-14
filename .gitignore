@@ -1,0 +1,24 @@
+## Build Artifacts
+**/[Dd]ebug/
+**/[Rr]elease/
+**/[Bb]in/
+**/[Oo]bj/ 
+**/x64/
+
+## User-specific files
+*.suo
+*.user
+*.sln.docstates
+
+## IDE/Editor Files
+.vs/
+*.vcxproj.filters
+
+## Dependency Management 
+**/packages/
+
+## Other potential exclusions
+*.log 
+*.pdb
+*.dll
+*.exe
