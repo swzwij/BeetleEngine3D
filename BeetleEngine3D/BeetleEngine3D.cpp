@@ -36,6 +36,7 @@ private:
 	float cameraYaw;
 	float cameraPitch;
 	float theta;
+	float gravity = -9.8f;
 	std::vector<EngineObject> renderQueue;
 
 	bool hasPhysics;
@@ -103,6 +104,13 @@ private:
 
 		for (auto& engineObject : renderQueue)
 		{
+			if (engineObject.tag == "GROUND")
+				continue;
+
+			// Apply gravity
+			if (engineObject.hasGravity)
+				engineObject.velocity.y += gravity * elapsedTime;
+
 			// Add velocity
 			Vector3 velocity = engineObject.velocity;
 			velocity.x *= elapsedTime;
@@ -111,15 +119,89 @@ private:
 			Vector3 newPosition = vectorUtil.Add(engineObject.position, velocity);
 			engineObject.position = newPosition;
 
-			// Ground Check
-			float sphereRadius = 0.1f;
+			// apply drag
+			if (engineObject.hasDrag) 
+			{
+				float dragCoefficient = 0.25f;  // For a sphere
+				float airDensity = 1.225f;     // Approximate density of air
+				float area = 1.0f;             // Estimate - depends on object shape
 
+				// Calculate drag force
+				Vector3 normalizedVelocity = vectorUtil.Normalise(engineObject.velocity);
+				float magnitudeSquaredVelocity = vectorUtil.MagnitudeSquared(engineObject.velocity);
+				Vector3 normalizedMagnitudeSquaredVelocity = vectorUtil.Multiply(normalizedVelocity, magnitudeSquaredVelocity);
+				Vector3 dragForce = vectorUtil.Multiply(normalizedMagnitudeSquaredVelocity, (-0.5f * dragCoefficient * airDensity * area));
+
+				// Apply drag force as an acceleration
+				//Vector3 dragAcceleration = dragForce; // TODO: divide by mass
+				Vector3 dragAcceleration = vectorUtil.Multiply(dragForce, elapsedTime);
+				engineObject.velocity = vectorUtil.Add(engineObject.velocity, dragAcceleration);
+			}
+
+			// Ground Check
+			float sphereRadius = 1;
 			Vector3 groundPoint = { 0, 0, 0 };
 			Vector3 groundNormal = { 0, 1, 0 };
+			float groundDistance = (newPosition.x - groundPoint.x) * groundNormal.x +
+				(newPosition.y - groundPoint.y) * groundNormal.y +
+				(newPosition.z - groundPoint.z) * groundNormal.z;
 
-			float distance = (newPosition.x - groundPoint.x) * groundNormal.x + (newPosition.y - groundPoint.y) * groundNormal.y + (newPosition.z - groundPoint.z) * groundNormal.z;
-			if (distance <= 0)
-				engineObject.position.y = engineObject.position.y + (sphereRadius - fabs(distance));
+			// Ground collision
+			if (groundDistance <= sphereRadius)
+			{
+				engineObject.position.y += (sphereRadius - fabs(groundDistance));
+				engineObject.velocity.y = -engineObject.velocity.y * engineObject.bounciness;
+			}
+
+			for (auto& otherEngineObject : renderQueue)
+			{
+				if (otherEngineObject.name == engineObject.name)
+					continue;
+
+				// Collision check
+				Vector3 thisPosition = engineObject.position;
+				Vector3 otherPosition = otherEngineObject.position;
+				float sphereDistance = sqrtf((otherPosition.x - thisPosition.x) * (otherPosition.x - thisPosition.x) +
+					(otherPosition.y - thisPosition.y) * (otherPosition.y - thisPosition.y) +
+					(otherPosition.z - thisPosition.z) * (otherPosition.z - thisPosition.z));
+
+				// Collision
+				if (sphereDistance <= sphereRadius * 2)
+				{
+					// Calculate collision normal
+					Vector3 collisionDifference = vectorUtil.Subtract(otherPosition, thisPosition);
+					Vector3 collisionNormal = vectorUtil.Normalise(collisionDifference);
+
+					// Store original relative velocity
+					Vector3 originalRelativeVelocity = vectorUtil.Subtract(engineObject.velocity, otherEngineObject.velocity);
+
+					// Calculate coefficient of restitution effect
+					float coefficient_of_restitution = 0.8;
+					Vector3 normalRelativeVelocity = vectorUtil.Multiply(collisionNormal, vectorUtil.Dot(collisionNormal, originalRelativeVelocity));
+					Vector3 coefficient = vectorUtil.Multiply(normalRelativeVelocity, (1 + coefficient_of_restitution));
+					Vector3 newRelativeVelocity = vectorUtil.Subtract(originalRelativeVelocity, coefficient);
+
+					// Calculate impulse
+					float totalMass = 1 + 1; // Assuming masses are 1
+					Vector3 impulse = vectorUtil.Multiply(newRelativeVelocity, totalMass);
+
+					// Apply collision impulse
+					engineObject.velocity.x = (engineObject.velocity.x + impulse.x) / totalMass;
+					engineObject.velocity.y = (engineObject.velocity.y + impulse.y) / totalMass;
+					engineObject.velocity.z = (engineObject.velocity.z + impulse.z) / totalMass;
+
+					otherEngineObject.velocity.x = (otherEngineObject.velocity.x - impulse.x) / totalMass;
+					otherEngineObject.velocity.y = (otherEngineObject.velocity.y - impulse.y) / totalMass;
+					otherEngineObject.velocity.z = (otherEngineObject.velocity.z - impulse.z) / totalMass;
+
+					// Displacement 
+					float overlap = (sphereRadius + sphereRadius) - sphereDistance;
+					Vector3 displacementSphere = vectorUtil.Multiply(collisionNormal, overlap / 2);
+
+					engineObject.position = vectorUtil.Subtract(engineObject.position, displacementSphere);
+					otherEngineObject.position = vectorUtil.Add(otherEngineObject.position, displacementSphere);
+				}
+			}
 		}
 	}
 
@@ -322,7 +404,7 @@ int main()
 {
 	BeetleEngine engine;
 
-	if (engine.ConstructConsole(128, 96, 4, 4))
+	if (engine.ConstructConsole(256, 240, 4, 4))
 		engine.Start();
 
 	return 0;

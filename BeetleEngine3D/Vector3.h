@@ -68,4 +68,9 @@ public:
 		Vector3 lineToIntersect = Multiply(lineStartToEnd, t);
 		return Add(lineStart, lineToIntersect);
 	}
+
+	float MagnitudeSquared(const Vector3& v) 
+	{
+		return v.x * v.x + v.y * v.y + v.z * v.z;
+	}
 };

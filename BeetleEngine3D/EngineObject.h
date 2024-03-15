@@ -6,9 +6,14 @@
 
 struct EngineObject 
 {
+    string name;
+    string tag;
     Mesh mesh;
     Vector3 position;
     Vector3 velocity;
+    bool hasGravity;
+    float bounciness;
+    bool hasDrag;
 
-    EngineObject(Mesh mesh, Vector3 position, Vector3 velocity) : mesh(mesh), position(position), velocity(velocity) {}
+    EngineObject(string name, string tag, Mesh mesh, Vector3 position, Vector3 velocity, bool hasGravity, float bounciness, bool hasDrag) : name(name), tag(tag), mesh(mesh), position(position), velocity(velocity), hasGravity(hasGravity), bounciness(bounciness), hasDrag(hasDrag) {}
 };

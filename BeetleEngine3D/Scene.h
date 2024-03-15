@@ -15,20 +15,20 @@ public:
 	{
 		std::vector<EngineObject> sceneObjects;
 
-		sceneObjects.push_back(CreateObject("ground.obj", { 0, 0, 0 }, { 0, 0, 0 }));
+		sceneObjects.push_back(CreateObject("ground", "GROUND", "ground.obj", { 0, 0, 0 }, { 0, 0, 0 }, false, 0, false));
 
-		sceneObjects.push_back(CreateObject("sphere.obj", { 0, 10, 5 }, { 0, -2, 0 }));
-		sceneObjects.push_back(CreateObject("sphere.obj", { 5, 12, 5 }, { 0, -2, 0 }));
+		sceneObjects.push_back(CreateObject("sphere1", "SPHERE", "sphere.obj", { 0, 1.5, 5 }, { 0, 0, 0 }, true, 0.25f, true));
+		sceneObjects.push_back(CreateObject("sphere2", "SPHERE", "sphere.obj", { 5, 3, 5 }, { -10, 0, 0 }, true, 0.25f, true));
 
 		return sceneObjects;
 	}
 
 private:
-	EngineObject CreateObject(string objectFileName, Vector3 position, Vector3 velocity)
+	EngineObject CreateObject(string name, string tag, string objectFileName, Vector3 position, Vector3 velocity, bool hasGravity, float bounciness, bool hasDrag)
 	{
 		Mesh objectMesh;
 		objectMesh.LoadObjectFile(objectFileName);
-		EngineObject engineObject(objectMesh, position, velocity);
+		EngineObject engineObject(name, tag, objectMesh, position, velocity, hasGravity, bounciness, hasDrag);
 		return engineObject;
 	}
 };
