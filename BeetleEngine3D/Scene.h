@@ -19,6 +19,7 @@ public:
 
 		sceneObjects.push_back(CreateObject("sphere1", "SPHERE", "sphere.obj", { 0, 1.5, 5 }, { 0, 0, 0 }, true, 0.25f, true));
 		sceneObjects.push_back(CreateObject("sphere2", "SPHERE", "sphere.obj", { 5, 3, 5 }, { -10, 0, 0 }, true, 0.25f, true));
+		//sceneObjects.push_back(CreateObject("Cat", "GROUND", "Cat.obj", { 0, 0, 5 }, { 0, 0, 0 }, false, 0, false));
 
 		return sceneObjects;
 	}

@@ -37,6 +37,7 @@ private:
 	float cameraPitch;
 	float theta;
 	float gravity = -9.8f;
+	bool wireFrame;
 	std::vector<EngineObject> renderQueue;
 
 	bool hasPhysics;
@@ -95,6 +96,9 @@ private:
 
 		if (GetKey(L'P').bPressed)
 			hasPhysics = !hasPhysics;
+
+		if (GetKey(L'T').bPressed)
+			wireFrame = !wireFrame;
 	}
 
 	void PhysicsCalculations(float elapsedTime)
@@ -391,8 +395,10 @@ private:
 				// Draw the transformed, viewed, clipped, projected, sorted, clipped triangles
 				for (auto& t : listTriangles)
 				{
-					FillTriangle(t.verticies[0].x, t.verticies[0].y, t.verticies[1].x, t.verticies[1].y, t.verticies[2].x, t.verticies[2].y, t.symbol, t.color);
-					//DrawTriangle(t.verticies[0].x, t.verticies[0].y, t.verticies[1].x, t.verticies[1].y, t.verticies[2].x, t.verticies[2].y, PIXEL_SOLID, FG_GREEN);
+					if (wireFrame)
+						DrawTriangle(t.verticies[0].x, t.verticies[0].y, t.verticies[1].x, t.verticies[1].y, t.verticies[2].x, t.verticies[2].y, PIXEL_SOLID, FG_GREEN);
+					else
+						FillTriangle(t.verticies[0].x, t.verticies[0].y, t.verticies[1].x, t.verticies[1].y, t.verticies[2].x, t.verticies[2].y, t.symbol, t.color);
 				}
 			}
 		}
