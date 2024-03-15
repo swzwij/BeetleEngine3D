@@ -8,6 +8,7 @@ struct EngineObject
 {
     Mesh mesh;
     Vector3 position;
+    Vector3 velocity;
 
-    EngineObject(Mesh mesh, Vector3 position) : mesh(mesh), position(position) {}
+    EngineObject(Mesh mesh, Vector3 position, Vector3 velocity) : mesh(mesh), position(position), velocity(velocity) {}
 };

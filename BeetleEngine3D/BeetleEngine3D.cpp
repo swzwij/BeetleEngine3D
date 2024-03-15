@@ -10,6 +10,7 @@
 #include <fstream>
 #include <strstream>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -28,12 +29,16 @@ public:
 	}
 
 private:
+
 	Matrix4x4 projectionMatrix;
 	Vector3 cameraPosition;
 	Vector3 lookDirection;
 	float cameraYaw;
+	float cameraPitch;
 	float theta;
 	std::vector<EngineObject> renderQueue;
+
+	bool hasPhysics;
 
 public:
 	bool OnUserCreate() override
@@ -48,6 +53,8 @@ public:
 	bool OnUserUpdate(float elapsedTime) override
 	{
 		UpdateCameraPosition(elapsedTime);
+
+		PhysicsCalculations(elapsedTime);
 
 		ClearScreen();
 
@@ -78,11 +85,42 @@ private:
 
 		if (GetKey(L'D').bHeld)
 			cameraYaw += 2.0f * elapsedTime;
+
+		if (GetKey(L'K').bHeld)
+			cameraPitch -= 2.0f * elapsedTime;
+
+		if (GetKey(L'L').bHeld)
+			cameraPitch += 2.0f * elapsedTime;
+
+		if (GetKey(L'P').bPressed)
+			hasPhysics = !hasPhysics;
 	}
 
 	void PhysicsCalculations(float elapsedTime)
 	{
+		if (!hasPhysics)
+			return;
 
+		for (auto& engineObject : renderQueue)
+		{
+			// Add velocity
+			Vector3 velocity = engineObject.velocity;
+			velocity.x *= elapsedTime;
+			velocity.y *= elapsedTime;
+			velocity.z *= elapsedTime;
+			Vector3 newPosition = vectorUtil.Add(engineObject.position, velocity);
+			engineObject.position = newPosition;
+
+			// Ground Check
+			float sphereRadius = 0.1f;
+
+			Vector3 groundPoint = { 0, 0, 0 };
+			Vector3 groundNormal = { 0, 1, 0 };
+
+			float distance = (newPosition.x - groundPoint.x) * groundNormal.x + (newPosition.y - groundPoint.y) * groundNormal.y + (newPosition.z - groundPoint.z) * groundNormal.z;
+			if (distance <= 0)
+				engineObject.position.y = engineObject.position.y + (sphereRadius - fabs(distance));
+		}
 	}
 
 	void ClearScreen()
@@ -96,7 +134,7 @@ private:
 		{
 			// World Tranmsform
 			Matrix4x4 matRotZ, matRotX;
-			theta += 2.0f * elapsedTime;
+			//theta += 2.0f * elapsedTime;
 			matRotZ = matrixUtil.MakeRotationZ(theta * 0.5f);
 			matRotX = matrixUtil.MakeRotationX(theta * 0.25f);
 
@@ -219,13 +257,11 @@ private:
 
 			// Sort triangles from back to front
 			sort(vecTrianglesToRaster.begin(), vecTrianglesToRaster.end(), [](Triangle& t1, Triangle& t2)
-				{
-					float z1 = (t1.verticies[0].z + t1.verticies[1].z + t1.verticies[2].z) / 3.0f;
-					float z2 = (t2.verticies[0].z + t2.verticies[1].z + t2.verticies[2].z) / 3.0f;
-					return z1 > z2;
-				});
-
-
+			{
+				float z1 = (t1.verticies[0].z + t1.verticies[1].z + t1.verticies[2].z) / 3.0f;
+				float z2 = (t2.verticies[0].z + t2.verticies[1].z + t2.verticies[2].z) / 3.0f;
+				return z1 > z2;
+			});
 
 			// Loop through all transformed, viewed, projected, and sorted triangles
 			for (auto& triToRaster : vecTrianglesToRaster)
@@ -286,7 +322,7 @@ int main()
 {
 	BeetleEngine engine;
 
-	if (engine.ConstructConsole(256, 200, 4, 4))
+	if (engine.ConstructConsole(128, 96, 4, 4))
 		engine.Start();
 
 	return 0;
