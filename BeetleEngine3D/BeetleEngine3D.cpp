@@ -155,6 +155,21 @@ private:
 			{
 				engineObject.position.y += (sphereRadius - fabs(groundDistance));
 				engineObject.velocity.y = -engineObject.velocity.y * engineObject.bounciness;
+
+				// Apply friction 
+				if (fabs(engineObject.velocity.x) > 0.01f) // Check if object is moving
+				{
+					float frictionCoefficient = -0.35f; // Adjust this value 
+					float normalForce = 1 * gravity; // Approx. normal force // 1 = mass
+					float frictionForce = frictionCoefficient * normalForce;
+
+					//  Direction opposite to velocity 
+					Vector3 frictionDirection = { -std::copysign(1.0f, engineObject.velocity.x), 0, 0 };
+					Vector3 frictionAcceleration = vectorUtil.Multiply(frictionDirection, frictionForce / 1); // 1 = mass
+
+					Vector3 frictionAccelerationScaled = vectorUtil.Multiply(frictionAcceleration, elapsedTime);
+					engineObject.velocity = vectorUtil.Add(engineObject.velocity, frictionAccelerationScaled);
+				}
 			}
 
 			for (auto& otherEngineObject : renderQueue)
@@ -165,9 +180,12 @@ private:
 				// Collision check
 				Vector3 thisPosition = engineObject.position;
 				Vector3 otherPosition = otherEngineObject.position;
-				float sphereDistance = sqrtf((otherPosition.x - thisPosition.x) * (otherPosition.x - thisPosition.x) +
+				float sphereDistance = sqrtf
+				(
+					(otherPosition.x - thisPosition.x) * (otherPosition.x - thisPosition.x) +
 					(otherPosition.y - thisPosition.y) * (otherPosition.y - thisPosition.y) +
-					(otherPosition.z - thisPosition.z) * (otherPosition.z - thisPosition.z));
+					(otherPosition.z - thisPosition.z) * (otherPosition.z - thisPosition.z)
+				);
 
 				// Collision
 				if (sphereDistance <= sphereRadius * 2)
