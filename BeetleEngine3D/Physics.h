@@ -7,7 +7,7 @@ class Physics
 	VectorOperations vectorUtil;
 
 private:
-	float _frictionCoefficient = -0.35f;
+	float _frictionCoefficient = -0.5f;
 	float _dragCoefficient = 0.25f;
 	float _restitutionCoefficient = 0.8; // Amount of velocity transfer
 	float _airDensity = 1.225f;
@@ -36,9 +36,9 @@ public:
 		Vector3 dragForce = vectorUtil.Multiply(normalizedMagnitudeSquaredVelocity, (-0.5f * _dragCoefficient * _airDensity * _area));
 
 		// Apply drag force as an acceleration
-		//Vector3 dragAcceleration = dragForce / mass; // TODO: divide by mass
-		Vector3 dragAcceleration = vectorUtil.Multiply(dragForce, elapsedTime);
-		obj.velocity = vectorUtil.Add(obj.velocity, dragAcceleration);
+		Vector3 dragAcceleration = vectorUtil.Divide(dragForce, obj.mass);
+		Vector3 scaledDragAcceleration = vectorUtil.Multiply(dragAcceleration, elapsedTime);
+		obj.velocity = vectorUtil.Add(obj.velocity, scaledDragAcceleration);
 	}
 
 	float GroundDistance(EngineObject& obj)
@@ -56,9 +56,7 @@ public:
 
 	void HandleGroundCollision(EngineObject& obj, float groundDistance, float gravity, float elapsedTime)
 	{
-		float sphereRadius = 1.0f;
-
-		obj.position.y += (sphereRadius - fabs(groundDistance));
+		obj.position.y += (obj.radius - fabs(groundDistance));
 		obj.velocity.y = -obj.velocity.y * obj.bounciness;
 
 		// Apply friction 
@@ -77,14 +75,14 @@ public:
 	{
 		// TODO: objects "never" stop
 
-		float normalForce = 1 * gravity; // Approx. normal force // 1 = mass
+		float normalForce = obj.mass * gravity;
 		float frictionForce = _frictionCoefficient * normalForce;
 
 		// Direction opposite to velocity 
 		Vector3 frictionDirection = vectorUtil.Normalise(obj.velocity);
 		frictionDirection = vectorUtil.Multiply(frictionDirection, -1.0f); // Reverse direction
 
-		Vector3 frictionAcceleration = vectorUtil.Multiply(frictionDirection, (frictionForce / 1));
+		Vector3 frictionAcceleration = vectorUtil.Multiply(frictionDirection, (frictionForce / obj.mass));
 
 		Vector3 frictionAccelerationScaled = vectorUtil.Multiply(frictionAcceleration, elapsedTime);
 		obj.velocity = vectorUtil.Add(obj.velocity, frictionAccelerationScaled); // Update velocity (additive change)
@@ -92,8 +90,6 @@ public:
 
 	void CalculateSphereCollision(EngineObject& objA, EngineObject& objB)
 	{
-		float sphereRadius = 1;
-
 		// Collision check
 		Vector3 thisPosition = objA.position;
 		Vector3 otherPosition = objB.position;
@@ -105,7 +101,7 @@ public:
 		);
 
 		// Collision
-		if (sphereDistance <= sphereRadius * 2)
+		if (sphereDistance <= (objA.radius + objB.radius))
 		{
 			// Calculate collision normal
 			Vector3 collisionDifference = vectorUtil.Subtract(otherPosition, thisPosition);
@@ -120,7 +116,7 @@ public:
 			Vector3 newRelativeVelocity = vectorUtil.Subtract(originalRelativeVelocity, coefficient);
 
 			// Calculate impulse
-			float totalMass = 1 + 1; // Assuming masses are 1
+			float totalMass = objA.mass + objB.mass;
 			Vector3 impulse = vectorUtil.Multiply(newRelativeVelocity, totalMass);
 
 			// Apply collision impulse
@@ -133,7 +129,7 @@ public:
 			objB.velocity.z = (objB.velocity.z - impulse.z) / totalMass;
 
 			// Displacement 
-			float overlap = (sphereRadius + sphereRadius) - sphereDistance;
+			float overlap = (objA.radius + objB.radius) - sphereDistance;
 			Vector3 displacementSphere = vectorUtil.Multiply(collisionNormal, overlap / 2);
 
 			objA.position = vectorUtil.Subtract(objA.position, displacementSphere);

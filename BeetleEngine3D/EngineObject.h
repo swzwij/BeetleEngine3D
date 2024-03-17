@@ -8,13 +8,47 @@ struct EngineObject
 {
     string name;
     string tag;
-    Mesh mesh;
-    Vector3 position;
-    Vector3 velocity;
-    bool hasGravity;
-    float bounciness;
-    bool hasDrag;
-    // radius
 
-    EngineObject(string name, string tag, Mesh mesh, Vector3 position, Vector3 velocity, bool hasGravity, float bounciness, bool hasDrag) : name(name), tag(tag), mesh(mesh), position(position), velocity(velocity), hasGravity(hasGravity), bounciness(bounciness), hasDrag(hasDrag) {}
+    Mesh mesh;
+
+    Vector3 position;
+    
+    float radius;
+
+    bool isSimulated;
+
+    Vector3 velocity;
+
+    float mass;
+    float bounciness;
+
+    bool hasGravity;
+    bool hasDrag;
+
+    EngineObject
+    (
+        string name,
+        string tag,
+        Mesh mesh,
+        bool isSimulated,
+        Vector3 position = { 0, 0, 0 },
+        Vector3 velocity = { 0, 0, 0 },
+        float radius = 1.0f,
+        float mass = 1.0f,
+        float bounciness = 0.25f,
+        bool hasGravity = true,
+        bool hasDrag = true
+    ) : 
+        name(name),
+        tag(tag),
+        mesh(mesh),
+        isSimulated(isSimulated),
+        position(position),
+        velocity(velocity),
+        radius(radius),
+        mass(mass),
+        bounciness(bounciness),
+        hasGravity(hasGravity),
+        hasDrag(hasDrag) 
+    { }
 };

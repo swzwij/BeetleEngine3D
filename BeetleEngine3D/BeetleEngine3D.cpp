@@ -110,7 +110,7 @@ private:
 
 		for (auto& engineObject : renderQueue)
 		{
-			if (engineObject.tag == "GROUND")
+			if (engineObject.tag == "GROUND" || engineObject.isSimulated == false)
 				continue;
 
 			if (engineObject.hasGravity)
@@ -121,10 +121,9 @@ private:
 			if (engineObject.hasDrag) 
 				physics.ApplyDrag(engineObject, elapsedTime);
 
-			float sphereRadius = 1;
 			float groundDistance = physics.GroundDistance(engineObject);
 
-			if (groundDistance <= sphereRadius)
+			if (groundDistance <= engineObject.radius)
 				physics.HandleGroundCollision(engineObject, groundDistance, gravity, elapsedTime);
 
 			for (auto& otherEngineObject : renderQueue)
