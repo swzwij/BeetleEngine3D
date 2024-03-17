@@ -137,6 +137,8 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="EngineObject.h" />
+    <ClInclude Include="Physics.h" />
+    <ClInclude Include="PhysicsBody.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Vector3.h" />
