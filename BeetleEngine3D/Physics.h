@@ -62,23 +62,32 @@ public:
 		obj.velocity.y = -obj.velocity.y * obj.bounciness;
 
 		// Apply friction 
-		if (fabs(obj.velocity.x) > 0.01f) // Check if object is moving
+		if (vectorUtil.MagnitudeSquared(obj.velocity) > 0.01f) // Check if object is moving
 		{
 			ApplyFriction(obj, gravity, elapsedTime);
+		}
+
+		if (vectorUtil.MagnitudeSquared(obj.velocity) < 0.001f)
+		{
+			obj.velocity = { 0, 0, 0 };
 		}
 	}
 
 	void ApplyFriction(EngineObject& obj, float gravity, float elapsedTime)
 	{
+		// TODO: objects "never" stop
+
 		float normalForce = 1 * gravity; // Approx. normal force // 1 = mass
 		float frictionForce = _frictionCoefficient * normalForce;
 
-		//  Direction opposite to velocity 
-		Vector3 frictionDirection = { -std::copysign(1.0f, obj.velocity.x), 0, 0 };
-		Vector3 frictionAcceleration = vectorUtil.Multiply(frictionDirection, frictionForce / 1); // 1 = mass
+		// Direction opposite to velocity 
+		Vector3 frictionDirection = vectorUtil.Normalise(obj.velocity);
+		frictionDirection = vectorUtil.Multiply(frictionDirection, -1.0f); // Reverse direction
+
+		Vector3 frictionAcceleration = vectorUtil.Multiply(frictionDirection, (frictionForce / 1));
 
 		Vector3 frictionAccelerationScaled = vectorUtil.Multiply(frictionAcceleration, elapsedTime);
-		obj.velocity = vectorUtil.Add(obj.velocity, frictionAccelerationScaled);
+		obj.velocity = vectorUtil.Add(obj.velocity, frictionAccelerationScaled); // Update velocity (additive change)
 	}
 
 	void CalculateSphereCollision(EngineObject& objA, EngineObject& objB)
